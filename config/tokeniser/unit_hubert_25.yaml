@@ -1,0 +1,10 @@
+defaults:
+  - default
+  - override /tokeniser/feature_extractor: mhubert_25   # preferred over changing individual feature_extractor parameters
+
+tokeniser_type: 'unit'
+
+params:
+  dedup: true
+  bos_eos_token_id: 1
+  

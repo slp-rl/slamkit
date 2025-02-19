@@ -1,0 +1,7 @@
+vocoder_type: hifigan
+dense_model_name: mhubert-base-25hz
+quantizer_model_name: kmeans
+vocab_size: 500
+vocoder_suffix: null
+speaker_meta: null 
+style_meta: null

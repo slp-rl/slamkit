@@ -1,0 +1,6 @@
+defaults:
+  - default
+  - _self_
+
+learning_rate: 5e-5
+beta: 0.1

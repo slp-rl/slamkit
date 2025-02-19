@@ -1,0 +1,13 @@
+defaults:
+  - tokeniser: unit_hubert_25
+  - _self_
+
+device: cuda
+data_path: ???
+out_path: ???
+skip: null
+take: null
+batch_size: 8
+num_workers: 4
+sample_rate: 16000
+torchaudio_backend: null

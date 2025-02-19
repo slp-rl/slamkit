@@ -1,0 +1,13 @@
+# @package _global_
+
+tokeniser:
+  feature_extractor_type: 'hubert'
+
+  feature_extractor:
+    pretrained_model: 'slprl/mhubert-base-25hz'
+    kmeans_path: 'https://dl.fbaipublicfiles.com/textless_nlp/twist/speech_tokenizer/mhubert_base_25hz_cp_mls_cv_sp_fisher_L11_km500.bin'
+    layer: 11
+    num_units: 500
+    cache_path: null
+    compile: false
+    load_config_only: false

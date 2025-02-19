@@ -1,0 +1,8 @@
+defaults:
+  - default
+  - _self_
+
+metric_type: storycloze
+subfolder: true
+data_path: //reference/ms_tSC
+

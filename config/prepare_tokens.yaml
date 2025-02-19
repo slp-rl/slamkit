@@ -1,0 +1,12 @@
+defaults:
+  - tokeniser: unit_hubert_25
+  - _self_
+
+tokeniser:
+  feature_extractor:
+    load_config_only: true
+
+data_path: ???
+out_path: ???
+meta_path: null
+n_threads: 32

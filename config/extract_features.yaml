@@ -1,0 +1,15 @@
+defaults:
+  - tokeniser: unit_hubert_25
+  - _self_
+
+device: cuda
+data_path: ???
+out_path: ???
+ext: flac
+cache_path: null
+data_skip: null
+data_take: null
+batch_size: 8
+num_workers: 4
+sample_rate: 16000
+torchaudio_backend: null

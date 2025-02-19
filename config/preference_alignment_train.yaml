@@ -1,0 +1,14 @@
+defaults:
+  - model: twist
+  - training_args: dpo_training_args
+  - data: preference_alignment_data
+  - logger: print
+  - tokeniser: unit_hubert_25
+  - _self_
+
+
+tokeniser:
+  params:
+    load_fe: False
+
+run_time: 6:00:00

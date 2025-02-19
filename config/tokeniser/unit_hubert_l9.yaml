@@ -1,0 +1,8 @@
+defaults:
+  - default
+
+tokeniser_type: 'unit'
+
+params:
+  dedup: true
+  bos_eos_token_id: 1

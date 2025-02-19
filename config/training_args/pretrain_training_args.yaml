@@ -1,0 +1,6 @@
+defaults:
+  - default
+  - _self_
+
+min_token_id_count: null
+max_token_id_count: null

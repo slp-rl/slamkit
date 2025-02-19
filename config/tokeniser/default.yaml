@@ -1,0 +1,23 @@
+defaults:
+  - _self_
+  - /tokeniser/feature_extractor: hubert_base_l9  # preferred over changing individual feature_extractor parameters
+
+tokeniser_type: 'unit'
+feature_extractor_type: 'hubert'
+
+feature_extractor:
+  pretrained_model: 'facebook/hubert-base-ls960'
+  kmeans_path: 'https://dl.fbaipublicfiles.com/hubert/hubert_base_ls960_L9_km500.bin'
+  layer: 9
+  num_units: 500
+  cache_path: null
+  compile: false
+  load_config_only: false
+
+params:
+  dedup: true
+  pad_token_id: 0
+  num_units: null
+  load_fe: true
+
+requires_meta: false

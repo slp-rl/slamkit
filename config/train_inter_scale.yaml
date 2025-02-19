@@ -1,0 +1,28 @@
+defaults:
+  - model: twist
+  - training_args: scaling_interleaving
+  - data: pretrain_multi_ds
+  - logger: wandb
+  - tokeniser: interleaved_hubert_25
+  - _self_
+
+data:
+  packing: true
+  train_ratios: [0.2023584112, 0.5433262899, 0.2543152989]  # sample ratios such that the number of tokens matches, text only, interleaved, speech only
+  repetitions: [1, 1, 1]
+
+tokeniser:
+  params:
+    load_fe: False
+
+model:
+  context_len: 2048
+  config_args:
+    base_model_name: EleutherAI/pythia-14m
+    attn_implementation: flash_attention_2
+    torch_dtype: bfloat16
+
+cont_training: False
+run_time: null
+train_max_tokens: null
+ds_token_size: 11081736716  # 11B tokens in the dataset across modalities

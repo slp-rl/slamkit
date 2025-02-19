@@ -1,0 +1,13 @@
+defaults:
+  - default
+  - override /tokeniser/feature_extractor: mhubert_25   # preferred over changing individual feature_extractor parameters
+
+tokeniser_type: 'interleave'
+
+params:
+  text_tokeniser_path: 'facebook/opt-125m'
+  interleave_method: 'poisson'
+  interleave_span: 10
+  interleave_prob: 0.3
+
+requires_meta: true

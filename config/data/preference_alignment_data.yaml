@@ -1,0 +1,7 @@
+defaults:
+  - default
+  - _self_
+
+repetition_filter: true
+auto_bleu_n: 2
+max_auto_bleu: 0.3

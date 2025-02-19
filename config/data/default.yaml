@@ -1,0 +1,3 @@
+train_path: ???
+val_path: ???
+num_proc: 32

@@ -1,0 +1,7 @@
+defaults:
+  - default
+  - _self_
+
+metric_type: sblimp
+subfolder: true
+data_path: //reference/sblimp

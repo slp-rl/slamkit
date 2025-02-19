@@ -1,0 +1,14 @@
+torch
+torchaudio
+torchvision
+transformers>=4.48.1
+datasets
+omegaconf
+hydra-core>=1.3.0
+accelerate
+numpy
+ninja
+wandb
+joblib
+trl
+scikit-learn

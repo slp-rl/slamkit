@@ -1,0 +1,7 @@
+defaults:
+  - default
+  - _self_
+
+metric_type: swuggy
+subfolder: true
+data_path: //reference/swuggy_inter

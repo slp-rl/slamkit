@@ -1,0 +1,8 @@
+defaults:
+  - default
+  - _self_
+
+packing: false
+chunk_units_min_length: null
+sample_units_max_length: null
+saved_ds_path: null

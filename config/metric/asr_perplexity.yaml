@@ -1,0 +1,16 @@
+defaults:
+  - default
+  - _self_
+
+metric_type: asr_perplexity
+whisper_model: openai/whisper-large-v3-turbo
+llm_name_or_path: meta-llama/Llama-3.2-1B
+prompt_length: 3
+num_files: 1000
+num_log: 10
+auto_bleu_n: 2
+generate_kwargs:
+  temperature: 0.8
+  top_k: 25
+  max_new_tokens: 150
+  do_sample: true

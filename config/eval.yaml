@@ -1,0 +1,13 @@
+defaults:
+  - model: twist
+  - tokeniser: unit_hubert_25
+  - metric: swuggy_inter
+  - vocoder: no_vocoder
+  - logger: print
+  - _self_  
+
+reference_path: null
+batch_size: 8
+device: cuda
+num_workers: 8
+pin_memory: true

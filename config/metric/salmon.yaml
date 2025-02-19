@@ -1,0 +1,7 @@
+defaults:
+  - default
+  - _self_
+  
+metric_type: salmon
+data_path: //reference/salmon
+parts: ['all']

@@ -1,0 +1,15 @@
+defaults:
+  - model: twist
+  - training_args: pretrain_training_args
+  - data: pretrain_data
+  - logger: print
+  - tokeniser: unit_hubert_25
+  - _self_
+
+tokeniser:
+  params:
+    load_fe: False
+
+cont_training: False
+run_time: 25:00:00
+train_max_tokens: null

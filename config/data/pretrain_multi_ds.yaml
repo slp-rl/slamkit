@@ -1,0 +1,10 @@
+defaults:
+  - default
+  - _self_
+
+train_path: ???  # List of paths to training data
+train_ratios: [1.0]  # List of ratios for batch composition of the datasets
+repetitions: [1]  # number of "epochs" for each dataset
+stopping_strategy: first_exhausted  # Stopping strategy for data interleaving
+packing: false
+saved_ds_path: null
