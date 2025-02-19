@@ -9,7 +9,7 @@ The official code for ["_Slamming_: Training a Speech Language Model on One GPU 
 ![https://pages.cs.huji.ac.il/adiyoss-lab/slamming/](media/slam_web.png)
 
 💻 We also plan to expand this repository to include more features, if you would like
-to develop this open source and contribute see [Contributing]().
+to develop this open source and contribute see [Contributing](#contributing).
 
 ## Installation
 The code was tested with the following `requirements.txt` and `python=3.12`, but should 
@@ -17,19 +17,30 @@ also work with other python versions.
 ```
 pip install -r requirements.txt
 ```
+
+The code should be installed as a library, which is the recommended way of usage. Some things might not work as expected if not installed this way. 
+```
+cd slamkit
+pip install -e .
+```
+
 Note that these are minimal requirements, and some features may require additional installation.
 For instance, the Vocoder is based on textlesslib [`fairseq`](https://github.com/facebookresearch/textlesslib) so see
 their installation guide for more details if you plan to use it.
 
 ## Usage
 ❗If you are only interested in evaluating or generating with a pre-trained SpeechLM, you can skip
-straight to the [Evaluation](#evaluation) section.
+straight to the [Eval](#eval) section.
 
-Our pacakge is built with four main scripts, corresponding to four main stages: [extract_features.py](https://github.com/gallilmaimon/slm_eval/blob/main/slm_eval/extract_features.py), [prepare_tokens.py](https://github.com/gallilmaimon/slm_eval/blob/main/slm_eval/prepare_tokens.py), [train.py](https://github.com/gallilmaimon/slm_eval/blob/main/slm_eval/train.py), [eval.py](https://github.com/gallilmaimon/slm_eval/blob/main/slm_eval/eval.py). 
+Our pacakge is built with four main scripts, corresponding to four main stages: [extract_features.py](https://github.com/slp-rl/slamkit/blob/main/cli/extract_features.py), [prepare_tokens.py](https://github.com/slp-rl/slamkit/blob/main/cli/prepare_tokens.py), [train.py](https://github.com/slp-rl/slamkit/blob/main/cli/train.py), [eval.py](https://github.com/slp-rl/slamkit/blob/main/cli/eval.py). 
 The core idea is to separate certain logics to share pre-computed representations as much as possible thus save time. 
 We explain about each part more below. 
 
 Our codebase uses [Hydra](https://hydra.cc) to manage configurations, we suggest that you read a bit about it if you are unfamiliar with it.
+
+## Pre-training
+
+We explain the run commands with a demonstration data sample provided located at [example_data/audio](https://github.com/slp-rl/slamkit/tree/main/example_data) the way you can assert that your output is as expected. 
 
 ### Extract features
 This script takes audio files and outputs a file with discrete token data, using a pre-trained speech tokeniser. 
@@ -40,9 +51,11 @@ depends on the feature extractor thus can be shared between different tokenisers
 The output of this script can be directly used for the next phase, which is tokeniser specific.
 An example of running it:
 ```
-python slm_eval/extract_features.py data_path=../data/librispeech/audio/dev-clean/ ext=flac out_path=../../data/librispeech/repr/hubert_25hz_dedup/dev_clean.json batch_size=16 tokeniser=unit_hubert_25 tokeniser.feature_extractor.compile=true num_workers=4 data_skip=10 data_take=500"
+python cli/extract_features.py data_path=example_data/audio ext=flac out_path=example_data/features.jsonl batch_size=16 tokeniser=unit_hubert_25 tokeniser.feature_extractor.compile=true num_workers=4
 ```
-We define the `data_path`, the `ext` (extension for audio), the `tokeniser` which is a config file in this case [config/tokeniser/unit_hubert_25.yaml](https://github.com/gallilmaimon/slm_eval/blob/main/config/tokeniser/unit_hubert_25.yaml).
+This will output a file that is similar to [example_data/features.jsonl](https://github.com/slp-rl/slamkit/blob/main/example_data/features.jsonl), usually up to the order of the files or the file_name.
+
+We define the `data_path`(should be a dir), the `ext` (extension for audio), the `tokeniser` which is a config file in this case [config/tokeniser/unit_hubert_25.yaml](https://github.com/slp-rl/slamkit/blob/main/config/tokeniser/unit_hubert_25.yaml).
 
 ⚠️ Note! The tokenise script operates over entire audio files without splitting them, which can consume a lot of memory for very large audio files (30 minutes) thus we recommend to run Voice activity detection (VAD) on the files before in order to split them.
 
@@ -54,24 +67,57 @@ We define the `data_path`, the `ext` (extension for audio), the `tokeniser` whic
 This script takes the output of `extract_features.py` and prepares the tokens as a string representation for 
 training. This script is already dependent on the tokeniser and the tokeniser specific features, such as text.
 
+```
+python cli/prepare_tokens.py data_path=example_data/features.jsonl out_path=example_data/tokens
+```
+Again this command should create a file similar to [example_data/tokens.jsonl](https://github.com/slp-rl/slamkit/blob/main/example_data/tokens.jsonl)
+
+This command can also create different tokens for different training regimes. e.g. You can use `tokeniser=interleaved_hubert_25` to create an text-speech interleaved dataset.
+
+❗ some training regimes might need aditional metadata, such as aligned text.
 
 ### Pre-Train
 This script takes pre-tokenised data (as output from `prepare_tokens.py`) and trains a speech language model over the tokens.
 
 An example of running it:
 ```bash
-python slm_eval/train.py data.train_path=`../../data/librispeech/tokens/hubert_25hz_dedup/*.json` data.val_path=../../data/librispeech/tokens/hubert_25hz_dedup/dev_clean.json tokeniser=unit_hubert_25 training_args.num_train_epochs=1 training_args.per_device_train_batch_size=16 training_args.gradient_accumulation_steps=4 data.num_proc=32 logger=wandb logger.entity=<Entity> logger.project=<Project> training_args.output_dir=../outputs/baseline
+python cli/train.py data.train_path=example_data/tokens.jsonl data.val_path=example_data/tokens.jsonl tokeniser=unit_hubert_25 training_args.num_train_epochs=1 training_args.per_device_train_batch_size=16 training_args.gradient_accumulation_steps=4 data.num_proc=32 logger=wandb logger.entity=<Entity> logger.project=<Project> training_args.output_dir=../outputs/baseline
 ```
 
 ❗Note that the `train_path` and `val_path` can be a specific file or a glob path for several files like in the example above. Use this to merge shards or datasets!
 
-❗Note that `training_args` is arguments to a HuggingFace🤗 model so you can pass any argument [it expects](https://huggingface.co/docs/transformers/v4.46.3/en/main_classes/trainer#transformers.TrainingArguments), for instance add `+dataloader_num_workers=8` to use 8 workers!
+❗Note that `training_args` is arguments to a HuggingFace🤗 model so you can pass any argument [it expects](https://huggingface.co/docs/transformers/v4.48.1/en/main_classes/trainer#transformers.TrainingArguments), for instance add `+dataloader_num_workers=8` to use 8 workers!
 
 🧪 We give an example of logging results to Weights & Biases but you could remove this and results will be printed locally
 
+## Preference Alignment
 
-### Preference Alignment
-...
+for the preferemce alignment portion we provide two scripts: [preference_alignment_feature_extractor.py](https://github.com/gallilmaimon/slm_eval/blob/055a4ae5d7ecffc5c94259bc85ed616b6bd21cfc/cli/preference_alignment_feature_extractor.py), [preference_alignment_train.py](https://github.com/gallilmaimon/slm_eval/blob/055a4ae5d7ecffc5c94259bc85ed616b6bd21cfc/cli/preference_alignment_train.py). for now there is no equvalent to prepare tokens since we don't support preference alignment for text-speech interleaved models. This features will come in the future.
+
+### Extract features
+
+The script works in a similar way to the original version, but expects input of a different type. instead of a folder with audio files in it we expect jsonl with the format
+```
+{"prompt_path" : "path/to/prompt.wav", "chosen_path" : "path/to/chosen.wav", "rejected_path" : "path/to/other.wav"}
+```
+
+and it will output
+```
+{"prompt_path" : "path/to/prompt.wav", "chosen_path" : "path/to/chosen.wav", "rejected_path" : "path/to/other.wav", "prompt" : {"audio_repr": <audio_repr>}, "chosen" : {"audio_repr": <audio_repr>}, "rejected" : {"audio_repr": <audio_repr>}}
+```
+
+An example command:
+```
+python cli/preference_alignment_feature_extractor.py data_path=preference_data.jsonl out_path=preference_data_features.jsonl
+```
+
+❗ Note that this script feature extracts the prompt,chosen,rejeced using one forward pass (so if batch_size=8, the model will do a forward pass on 24 files). choose batch size accordingly.
+
+### Preference Alignment Train
+
+the script again works in similar way to [Pre-training](#pre-train). The only difference is that you will usually start with a pretrained model using the argument `model.pretrained_model=<>` where path can be either a path to a checkpoint or a model in hugging face such as [slprl/slam](https://huggingface.co/slprl/slam). 
+
+For now we only support [DPO](https://huggingface.co/docs/trl/main/en/dpo_trainer), other types may be added in the future.
 
 
 ### Eval
@@ -81,12 +127,13 @@ We also support generating continuations, and generative metrics: GenPPL and Aut
 
 An example of running it:
 ```bash
-slm_eval/eval.py tokeniser=unit_hubert_25 metric=storycloze metric.data_path=<TSC_PATH> batch_size=32 model.pretrained_model=<TRAINED_MODEL_PATH>
+python cli/eval.py tokeniser=unit_hubert_25 metric=storycloze metric.data_path=<TSC_PATH> batch_size=32 model.pretrained_model=<TRAINED_MODEL_PATH>
 ```
 
-❗Note that the `model.pretrained_model` needs to point to a folder of a specific step within the output folder `training_args.output_dir` from training.
 
-❗Note that we currently only support running one metric with each run of `eval.py`
+❗Note that the `model.pretrained_model` needs to point to a folder of a specific step within the output folder `training_args.output_dir` from training or a model from hf.
+
+❗Note that we currently only support running one metric with each run of `eval.py`. You can use [hydra multirun](https://hydra.cc/docs/tutorials/basic/running_your_app/multi-run/) to run them in sucession or in parallel
 
 ## Results
 We provide some results for our pre-trained models, compared to other SLMs.
@@ -114,6 +161,18 @@ We provide some results for our pre-trained models, compared to other SLMs.
 | _Slam_                                    | 1×A5000 | 358M   | 1.4B + 5M     | 58.86     | 58.04         | 82.04         | 62.8     | 3.88        |
 | _Slam_ (scaled)                           | 2×A100  | 358M   | 16.7B + 9M    | **61.11** | **61.30**     | **84.18**     | **46.6** | 3.75        |
 
+## slamkit library
+
+You can also use slamkit as a library to build your own projects without using our scripts (even though we do recommend you using them). e.g. if you want to use our pretrained [slam](https://huggingface.co/slprl/slam) you can use the following lines of code
+
+```
+from slamkit.model import UnitLM
+model = UnitLM.from_pretrained("slprl/slam")
+```
+
+Since this library is built upon huggingface, most features of hf will work out of the box. such as pushing to the hub
+
+`model.push_to_hub('<entity>/great_model')`
 
 ## Contributing
 We welcome contributions to this repository. Want to add support for new tokenisers? 
