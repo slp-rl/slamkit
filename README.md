@@ -1,4 +1,4 @@
-# Slam
+# SlamKit
 The official code for ["_Slamming_: Training a Speech Language Model on One GPU in a Day"]().
 
 <p align="center">
@@ -12,19 +12,13 @@ The official code for ["_Slamming_: Training a Speech Language Model on One GPU 
 to develop this open source and contribute see [Contributing](#contributing).
 
 ## Installation
-The code was tested with the following `requirements.txt` and `python=3.12`, but should 
-also work with other python versions.
-```
-pip install -r requirements.txt
-```
-
-The code should be installed as a library, which is the recommended way of usage. Some things might not work as expected if not installed this way. 
+The code was tested with `python=3.12`, but should also work with other python versions. Install as below"
 ```
 cd slamkit
 pip install -e .
 ```
 
-Note that these are minimal requirements, and some features may require additional installation.
+Note that this installs minimal requirements, and some features may require additional installation.
 For instance, the Vocoder is based on textlesslib [`fairseq`](https://github.com/facebookresearch/textlesslib) so see
 their installation guide for more details if you plan to use it.
 
@@ -40,11 +34,11 @@ Our codebase uses [Hydra](https://hydra.cc) to manage configurations, we suggest
 
 ## Pre-training
 
-We explain the run commands with a demonstration data sample provided located at [example_data/audio](https://github.com/slp-rl/slamkit/tree/main/example_data) the way you can assert that your output is as expected. 
+We explain the run commands with a demonstration data sample provided located at [example_data/audio](https://github.com/slp-rl/slamkit/tree/main/example_data) that way you can assert that your output is as expected. 
 
 ### Extract features
 This script takes audio files and outputs a file with discrete token data, using a pre-trained speech tokeniser. 
-The representation operate at Tokeniser level to guarantee consistency across different steps, however, this truly only 
+The representation operate at Tokeniser level to guarantee consistency across different steps, however, it truly only 
 depends on the feature extractor thus can be shared between different tokenisers over the same features 
 (such as text-interleaving or units only over the same Hubert). 
 
@@ -96,7 +90,7 @@ for the preferemce alignment portion we provide two scripts: [preference_alignme
 
 ### Extract features
 
-The script works in a similar way to the original version, but expects input of a different type. instead of a folder with audio files in it we expect jsonl with the format
+The script works in a similar way to the original version, but expects input of a different type. instead of a folder with audio files in it we expect a `jsonl` with the format
 ```
 {"prompt_path" : "path/to/prompt.wav", "chosen_path" : "path/to/chosen.wav", "rejected_path" : "path/to/other.wav"}
 ```
@@ -161,17 +155,15 @@ We provide some results for our pre-trained models, compared to other SLMs.
 | _Slam_                                    | 1×A5000 | 358M   | 1.4B + 5M     | 58.86     | 58.04         | 82.04         | 62.8     | 3.88        |
 | _Slam_ (scaled)                           | 2×A100  | 358M   | 16.7B + 9M    | **61.11** | **61.30**     | **84.18**     | **46.6** | 3.75        |
 
-## slamkit library
+## SlamKit library
+You can also use `slamkit` as a library to build your own projects without using our scripts, e.g. if you want to use our pretrained [slam](https://huggingface.co/slprl/slam) you can use the following lines of code
 
-You can also use slamkit as a library to build your own projects without using our scripts (even though we do recommend you using them). e.g. if you want to use our pretrained [slam](https://huggingface.co/slprl/slam) you can use the following lines of code
-
-```
+```python
 from slamkit.model import UnitLM
 model = UnitLM.from_pretrained("slprl/slam")
 ```
 
-Since this library is built upon huggingface, most features of hf will work out of the box. such as pushing to the hub
-
+Since this library is built upon huggingface🤗, most features of hf will work out of the box. such as pushing to the hub:
 `model.push_to_hub('<entity>/great_model')`
 
 ## Contributing
