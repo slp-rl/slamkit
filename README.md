@@ -12,7 +12,7 @@ The official code for ["_Slamming_: Training a Speech Language Model on One GPU 
 to develop this open source and contribute see [Contributing](#contributing).
 
 ## Installation
-The code was tested with `python=3.12`, but should also work with other python versions. Install as below"
+The code was tested with `python=3.12`, but should also work with other python versions. Install as below:
 ```
 cd slamkit
 pip install -e .
