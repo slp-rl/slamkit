@@ -1,8 +1,8 @@
 # SlamKit
-The official code for ["_Slamming_: Training a Speech Language Model on One GPU in a Day"]().
+The official code for ["_Slamming_: Training a Speech Language Model on One GPU in a Day"](https://arxiv.org/abs/2502.15814).
 
 <p align="center">
-    🌐 <a href="https://pages.cs.huji.ac.il/adiyoss-lab/slamming/" target="_blank">Project</a> | 📃 <a href="https://arxiv.org/abs/" target="_blank">Paper - soon!</a> | 🤗 <a href="https://huggingface.co/collections/slprl/slam-67b58a61b57083505c8876b2" target="_blank">Models & Datasets</a><br>
+    🌐 <a href="https://pages.cs.huji.ac.il/adiyoss-lab/slamming/" target="_blank">Project</a> | 📃 <a href="https://arxiv.org/abs/2502.15814" target="_blank">Paper</a> | 🤗 <a href="https://huggingface.co/collections/slprl/slam-67b58a61b57083505c8876b2" target="_blank">Models & Datasets</a><br>
 </p>
 
 
@@ -174,7 +174,13 @@ project - open an Issue, and one of the maintainers will guide you in opening a 
 ## Citation
 If you found this repository useful, please cite our work:
 ```bibtex
-@article{maimon2024slamming,
-          Soon!
-         }
+@misc{maimon2025slamming,
+      title={Slamming: Training a Speech Language Model on One GPU in a Day}, 
+      author={Gallil Maimon and Avishai Elmakies and Yossi Adi},
+      year={2025},
+      eprint={2502.15814},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2502.15814}, 
+}
 ```
