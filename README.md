@@ -121,7 +121,7 @@ We also support generating continuations, and generative metrics: GenPPL and Aut
 
 An example of running it:
 ```bash
-python cli/eval.py tokeniser=unit_hubert_25 metric=storycloze metric.data_path=<TSC_PATH> batch_size=32 model.pretrained_model=<TRAINED_MODEL_PATH>
+python cli/eval.py tokeniser=unit_hubert_25 metric=tstorycloze metric.data_path=<TSC_PATH> batch_size=32 model.pretrained_model=<TRAINED_MODEL_PATH>
 ```
 
 
