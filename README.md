@@ -26,7 +26,7 @@ their installation guide for more details if you plan to use it.
 ❗If you are only interested in evaluating or generating with a pre-trained SpeechLM, you can skip
 straight to the [Eval](#eval) section.
 
-Our pacakge is built with four main scripts, corresponding to four main stages: [extract_features.py](https://github.com/slp-rl/slamkit/blob/main/cli/extract_features.py), [prepare_tokens.py](https://github.com/slp-rl/slamkit/blob/main/cli/prepare_tokens.py), [train.py](https://github.com/slp-rl/slamkit/blob/main/cli/train.py), [eval.py](https://github.com/slp-rl/slamkit/blob/main/cli/eval.py). 
+Our package is built with four main scripts, corresponding to four main stages: [extract_features.py](https://github.com/slp-rl/slamkit/blob/main/cli/extract_features.py), [prepare_tokens.py](https://github.com/slp-rl/slamkit/blob/main/cli/prepare_tokens.py), [train.py](https://github.com/slp-rl/slamkit/blob/main/cli/train.py), [eval.py](https://github.com/slp-rl/slamkit/blob/main/cli/eval.py). 
 The core idea is to separate certain logics to share pre-computed representations as much as possible thus save time. 
 We explain about each part more below. 
 
