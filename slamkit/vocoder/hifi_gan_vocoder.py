@@ -11,7 +11,7 @@ class HiFiGANVocoder(AudioVocoder):
                  style_meta: str = None,
                  ):
         super().__init__()
-        from textless.vocoders.hifigan.vocoder import CodeHiFiGANVocoder
+        from .textless_hifigan.vocoder import CodeHiFiGANVocoder
         self.vocoder = CodeHiFiGANVocoder.by_name(dense_model_name,
                                                   quantizer_model_name,
                                                   vocab_size,
