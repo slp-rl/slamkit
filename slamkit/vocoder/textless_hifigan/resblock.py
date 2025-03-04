@@ -1,3 +1,7 @@
+# Copied from textlesslib (https://github.com/facebookresearch/textlesslib)
+# Please refer to the MIT license there (https://github.com/facebookresearch/textlesslib?tab=MIT-1-ov-file)
+# Below is the original header from the file
+
 # Residual block from the Hifi-gan model:
 # https://github.com/jik876/hifi-gan
 

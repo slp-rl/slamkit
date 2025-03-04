@@ -42,6 +42,8 @@ def main(cfg: DictConfig):
         elif cfg.metric.metric_type == 'salmon':
             res = salmon(model, path, used_token_modality, mean_nll, cfg.metric.parts, cfg.batch_size, cfg.num_workers, cfg.pin_memory)
         elif cfg.metric.metric_type == 'generate':
+            if cfg.vocoder is None:
+                logger.warning("You are currently trying to run generation without a vocoder, which will generate tokens, but has no effect. You can use a vocoder by, e.g. setting `vocoder=vocoder_hubert_25`")
             res = generate(model, path, cfg.batch_size, used_token_modality,
                         cfg.metric.prompt_length, tokeniser.fe_sample_rate, cfg.metric.num_files,
                         cfg.num_workers, cfg.pin_memory, **cfg.metric.get("generate_kwargs", {}))
