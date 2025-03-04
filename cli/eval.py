@@ -56,7 +56,7 @@ def main(cfg: DictConfig):
             if key == "generate" or key == "prompts":
                 continue
             print(f"{key}: {val}")
-    if cfg.metric.get("out_path", False) and "generate" in res:
+    if cfg.metric.get("out_path", False) and "generate" in res and cfg.vocoder is not None:
         import torchaudio
         os.makedirs(cfg.metric.out_path, exist_ok=True)
         for i, gen in enumerate(res["generate"]):
@@ -73,7 +73,7 @@ def main(cfg: DictConfig):
         if cfg.logger.run_id is None:
             raise ValueError('No run_id specified for wandb logging')
         wandb.init(project=cfg.logger.project, entity=cfg.logger.entity, id=cfg.logger.run_id, resume="must")
-        if "generate" in res and "prompts" in res:
+        if "generate" in res and "prompts" in res and cfg.vocoder is not None:
             logs = {}
             for i, (gen, prompt) in enumerate(zip(res["generate"], res["prompts"])):
                 if i == cfg.metric.get("num_log", -1):
