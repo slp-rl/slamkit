@@ -2,8 +2,10 @@ output_dir: ./results
 eval_strategy: steps
 eval_steps: 1000
 warmup_steps: 100
-lr_scheduler_type: inverse_sqrt
+warmup_ratio: 0.01  # 1% of training steps, will take effect if this is more than the 100 above
+lr_scheduler_type: cosine_with_min_lr
 learning_rate: 1e-3
+lr_scheduler_kwargs: {'min_lr': 5e-5}
 max_grad_norm: 0.5
 num_train_epochs: 1
 per_device_train_batch_size: 8

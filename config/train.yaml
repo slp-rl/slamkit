@@ -11,5 +11,5 @@ tokeniser:
     load_fe: False
 
 cont_training: False
-run_time: 25:00:00
+run_time: null
 train_max_tokens: null

@@ -10,5 +10,6 @@ ext: wav
 generate_kwargs:
   temperature: 0.8
   top_k: 25
+  repetition_penalty: 1.1  # To help with repetitions in post-DPO models as mentioned in the paper
   max_new_tokens: 150
   do_sample: true

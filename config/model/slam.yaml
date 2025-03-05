@@ -1,0 +1,9 @@
+defaults:
+  - twist
+
+context_len: 1024
+
+config_args:
+  base_model_name: Qwen/Qwen2.5-0.5B
+  rope_theta: 10000
+  torch_dtype: bfloat16
