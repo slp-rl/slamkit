@@ -12,15 +12,11 @@ The official code for ["_Slamming_: Training a Speech Language Model on One GPU 
 to develop this open source and contribute see [Contributing](#contributing).
 
 ## Installation
-The code was tested with `python=3.12`, but should also work with other python versions. Install as below:
+The code was tested with `python>=3.11`, but should also work with slightly older python versions. Install as below:
 ```
 cd slamkit
 pip install -e .
 ```
-
-Note that this installs minimal requirements, and some features may require additional installation.
-For instance, the Vocoder is based on textlesslib [`fairseq`](https://github.com/facebookresearch/textlesslib) so see
-their installation guide for more details if you plan to use it.
 
 ## Usage
 ❗If you are only interested in evaluating or generating with a pre-trained SpeechLM, you can skip
@@ -109,24 +105,24 @@ python cli/preference_alignment_feature_extractor.py data_path=preference_data.j
 
 ### Preference Alignment Train
 
-the script again works in similar way to [Pre-training](#pre-train). The only difference is that you will usually start with a pretrained model using the argument `model.pretrained_model=<>` where path can be either a path to a checkpoint or a model in hugging face such as [slprl/slam](https://huggingface.co/slprl/slam). 
+the script again works in similar way to [Pre-training](#pre-train). The only difference is that you will usually start with a pretrained model using the argument `model.pretrained_model=<>` where path can be either a path to a checkpoint or a model in hugging face such as [slprl/slam_scaled](https://huggingface.co/slprl/slam_scaled). 
 
 For now we only support [DPO](https://huggingface.co/docs/trl/main/en/dpo_trainer), other types may be added in the future.
 
 
-### Eval
-This script is used to evaluate metrics of your awesomely trained SpeechLM. 
+## Eval
+This script is used to evaluate metrics of your awesomely trained SpeechLM, or generate speech contiuations.
 We currently support modelling metrics: sWUGGY, sBLIMP, Spoken StoryCloze and [SALMon🍣](https://github.com/slp-rl/salmon).
 We also support generating continuations, and generative metrics: GenPPL and Auto-BLEU.
 
-An example of running it:
+An example of running it for metric calculation:
 ```bash
 python cli/eval.py tokeniser=unit_hubert_25 metric=tstorycloze metric.data_path=<TSC_PATH> batch_size=32 model.pretrained_model=<TRAINED_MODEL_PATH>
 ```
 
-Another example of running generation given a prompt, using a pretrained vocoder:
+An example of running generation given a prompt, using a pretrained vocoder:
 ```bash
-python cli/eval.py tokeniser=unit_hubert_25 metric=generate batch_size=32 model.pretrained_model=slprl/slam metric.data_path=/some/path/*.wav vocoder=vocoder_hubert_25
+python cli/eval.py tokeniser=unit_hubert_25 metric=generate batch_size=32 model.pretrained_model=slprl/slam_scaled metric.data_path=/some/path/*.wav vocoder=vocoder_hubert_25
 # then, find generated files at `generated/`.
 ```
 
