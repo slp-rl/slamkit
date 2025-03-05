@@ -124,10 +124,18 @@ An example of running it:
 python cli/eval.py tokeniser=unit_hubert_25 metric=tstorycloze metric.data_path=<TSC_PATH> batch_size=32 model.pretrained_model=<TRAINED_MODEL_PATH>
 ```
 
+Another example of running generation given a prompt, using a pretrained vocoder:
+```bash
+python cli/eval.py tokeniser=unit_hubert_25 metric=generate batch_size=32 model.pretrained_model=slprl/slam metric.data_path=/some/path/*.wav vocoder=vocoder_hubert_25
+# then, find generated files at `generated/`.
+```
+
 
 ❗Note that the `model.pretrained_model` needs to point to a folder of a specific step within the output folder `training_args.output_dir` from training or a model from hf.
 
-❗Note that we currently only support running one metric with each run of `eval.py`. You can use [hydra multirun](https://hydra.cc/docs/tutorials/basic/running_your_app/multi-run/) to run them in sucession or in parallel
+❗Note that we currently only support running one metric with each run of `eval.py`. You can use [hydra multirun](https://hydra.cc/docs/tutorials/basic/running_your_app/multi-run/) to run them in sucession or in parallel.
+
+❗Note that you can set `TEXTLESS_CHECKPOINT_ROOT` to specify the download location of the vocoder. It defaults to `~/.textless/`.
 
 ## Results
 We provide some results for our pre-trained models, compared to other SLMs.
@@ -170,6 +178,9 @@ Since this library is built upon huggingface🤗, most features of hf will work 
 We welcome contributions to this repository. Want to add support for new tokenisers? 
 Add support for even more efficient implementations? If you are interested in building this open source 
 project - open an Issue, and one of the maintainers will guide you in opening a PR!
+
+## Acknowledgements
+We isolate vocoder-related code from [textlesslib](https://github.com/facebookresearch/textlesslib), in `slamkit/vocoder/textless_*`.
 
 ## Citation
 If you found this repository useful, please cite our work:

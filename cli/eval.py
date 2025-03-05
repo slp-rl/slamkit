@@ -42,6 +42,8 @@ def main(cfg: DictConfig):
         elif cfg.metric.metric_type == 'salmon':
             res = salmon(model, path, used_token_modality, mean_nll, cfg.metric.parts, cfg.batch_size, cfg.num_workers, cfg.pin_memory)
         elif cfg.metric.metric_type == 'generate':
+            if cfg.vocoder is None:
+                logger.warning("You are currently trying to run generation without a vocoder, which will generate tokens, but has no effect. You can use a vocoder by, e.g. setting `vocoder=vocoder_hubert_25`")
             res = generate(model, path, cfg.batch_size, used_token_modality,
                         cfg.metric.prompt_length, tokeniser.fe_sample_rate, cfg.metric.num_files,
                         cfg.num_workers, cfg.pin_memory, **cfg.metric.get("generate_kwargs", {}))
@@ -56,7 +58,7 @@ def main(cfg: DictConfig):
             if key == "generate" or key == "prompts":
                 continue
             print(f"{key}: {val}")
-    if cfg.metric.get("out_path", False) and "generate" in res:
+    if cfg.metric.get("out_path", False) and "generate" in res and cfg.vocoder is not None:
         import torchaudio
         os.makedirs(cfg.metric.out_path, exist_ok=True)
         for i, gen in enumerate(res["generate"]):
@@ -73,7 +75,7 @@ def main(cfg: DictConfig):
         if cfg.logger.run_id is None:
             raise ValueError('No run_id specified for wandb logging')
         wandb.init(project=cfg.logger.project, entity=cfg.logger.entity, id=cfg.logger.run_id, resume="must")
-        if "generate" in res and "prompts" in res:
+        if "generate" in res and "prompts" in res and cfg.vocoder is not None:
             logs = {}
             for i, (gen, prompt) in enumerate(zip(res["generate"], res["prompts"])):
                 if i == cfg.metric.get("num_log", -1):
