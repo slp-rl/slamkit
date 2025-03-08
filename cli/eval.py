@@ -13,7 +13,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-# disables fast tokenisers parallelism, beacuse it doesn't work with Dataloaders
+# disables fast tokenisers parallelism, because it doesn't work with Dataloaders
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 
@@ -33,26 +33,33 @@ def main(cfg: DictConfig):
     with torch.inference_mode():
         used_token_modality = cfg.metric.get("used_token_modality", None)
         mean_nll = cfg.metric.get("mean_nll", True)
-        if cfg.metric.metric_type == 'swuggy':
-            res = swuggy(model, path, used_token_modality, mean_nll, cfg.batch_size, cfg.num_workers, cfg.pin_memory, cfg.metric.get("subfolder", False))
-        elif cfg.metric.metric_type == 'sblimp':
-            res = sblimp(model, path, used_token_modality, mean_nll, cfg.batch_size, cfg.num_workers, cfg.pin_memory, cfg.metric.get("subfolder", False))
-        elif cfg.metric.metric_type == 'storycloze':
-            res = storycloze(model, path, used_token_modality, mean_nll, cfg.batch_size, cfg.num_workers, cfg.pin_memory, cfg.metric.get("subfolder", False))
-        elif cfg.metric.metric_type == 'salmon':
-            res = salmon(model, path, used_token_modality, mean_nll, cfg.metric.parts, cfg.batch_size, cfg.num_workers, cfg.pin_memory)
-        elif cfg.metric.metric_type == 'generate':
-            if cfg.vocoder is None:
-                logger.warning("You are currently trying to run generation without a vocoder, which will generate tokens, but has no effect. You can use a vocoder by, e.g. setting `vocoder=vocoder_hubert_25`")
-            res = generate(model, path, cfg.batch_size, used_token_modality,
-                        cfg.metric.prompt_length, tokeniser.fe_sample_rate, cfg.metric.num_files,
-                        cfg.num_workers, cfg.pin_memory, **cfg.metric.get("generate_kwargs", {}))
-        elif cfg.metric.metric_type == 'asr_perplexity':
-            res = asr_perplexity(model, path, cfg.batch_size, cfg.metric.whisper_model, cfg.metric.llm_name_or_path, used_token_modality,
-                                cfg.metric.prompt_length, cfg.metric.auto_bleu_n, tokeniser.fe_sample_rate, cfg.metric.get("num_files", None),
-                                cfg.num_workers, cfg.pin_memory, **cfg.metric.get("generate_kwargs", {}))
+        cross_modal = cfg.metric.get("cross_modal", False)
+        if not cross_modal:
+            if cfg.metric.metric_type == 'swuggy':
+                res = swuggy(model, path, used_token_modality, mean_nll, cfg.batch_size, cfg.num_workers, cfg.pin_memory, cfg.metric.get("subfolder", False))
+            elif cfg.metric.metric_type == 'sblimp':
+                res = sblimp(model, path, used_token_modality, mean_nll, cfg.batch_size, cfg.num_workers, cfg.pin_memory, cfg.metric.get("subfolder", False))
+            elif cfg.metric.metric_type == 'storycloze':
+                res = storycloze(model, path, used_token_modality, mean_nll, cfg.batch_size, cfg.num_workers, cfg.pin_memory, cfg.metric.get("subfolder", False))
+            elif cfg.metric.metric_type == 'salmon':
+                res = salmon(model, path, used_token_modality, mean_nll, cfg.metric.parts, cfg.batch_size, cfg.num_workers, cfg.pin_memory)
+            elif cfg.metric.metric_type == 'generate':
+                if cfg.vocoder is None:
+                    logger.warning("You are currently trying to run generation without a vocoder, which will generate tokens, but has no effect. You can use a vocoder by, e.g. setting `vocoder=vocoder_hubert_25`")
+                res = generate(model, path, cfg.batch_size, used_token_modality,
+                            cfg.metric.prompt_length, tokeniser.fe_sample_rate, cfg.metric.num_files,
+                            cfg.num_workers, cfg.pin_memory, **cfg.metric.get("generate_kwargs", {}))
+            elif cfg.metric.metric_type == 'asr_perplexity':
+                res = asr_perplexity(model, path, cfg.batch_size, cfg.metric.whisper_model, cfg.metric.llm_name_or_path, used_token_modality,
+                                    cfg.metric.prompt_length, cfg.metric.auto_bleu_n, tokeniser.fe_sample_rate, cfg.metric.get("num_files", None),
+                                    cfg.num_workers, cfg.pin_memory, **cfg.metric.get("generate_kwargs", {}))
+            else:
+                raise ValueError(f'Unknown metric type: {cfg.metric.metric_type}')
         else:
-            raise ValueError(f'Unknown metric type: {cfg.metric.metric_type}')
+            from slamkit.metric.cross_modal_metric import cm_storycloze
+            if cfg.metric.metric_type == 'storycloze':
+                res = cm_storycloze(model, path, cfg.metric.prompt_modality, cfg.metric.cont_modality, used_token_modality, mean_nll, cfg.batch_size, cfg.num_workers, cfg.pin_memory, cfg.metric.get("subfolder", False))
+
     if cfg.metric.metric_type != "generate":
         for key, val in res.items():
             if key == "generate" or key == "prompts":

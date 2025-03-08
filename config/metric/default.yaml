@@ -3,3 +3,4 @@ metric_type: ???
 subfolder: false
 mean_nll: true
 used_token_modality: null
+cross_modal: false

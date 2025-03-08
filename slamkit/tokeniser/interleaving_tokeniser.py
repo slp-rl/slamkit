@@ -1,17 +1,56 @@
 import math
 import torch
 import numpy as np
-from typing import List, Optional, Dict
+import re
+import os
+from dataclasses import dataclass
+from enum import Enum
+from typing import List, Optional, Dict, Union
 from transformers import AutoTokenizer
 from itertools import groupby
 from bisect import bisect_left, bisect_right
-import re
+
 
 from .audio_tokeniser import AudioTokeniser
 from ..feature_extractor.audio_feature_extractor import AudioFeatureExtractor
 
 SPEECH_TOKEN = '<speech>'
 TEXT_TOKEN = '<text>'
+
+class ContentType(Enum):
+    TEXT = "TEXT"
+    SPEECH = "SPEECH"
+
+@dataclass
+class GenerationInput:
+    content: Union[str, os.PathLike, torch.Tensor, np.ndarray]
+    content_type: ContentType
+
+    @classmethod
+    def from_tuple(cls, tup):
+        content_type, content = tup
+        content_type = content_type.upper()
+        assert content_type in [
+            "SPEECH",
+            "TEXT",
+        ], f"expects content_type to be one of ['SPEECH', 'TEXT'], found '{content_type}'"
+        if content_type == "TEXT":
+            content_type = ContentType.TEXT
+        elif content_type == "SPEECH":
+            content_type = ContentType.SPEECH
+        return cls(content=content, content_type=content_type)
+
+    def to(self, device):
+        if self.content_type == ContentType.TEXT:
+            return self
+        if isinstance(self.content, np.ndarray):
+            return GenerationInput(torch.from_numpy(self.content).to(device), self.content_type)
+        if isinstance(self.content, str):
+            return GenerationInput(self.content, self.content_type)
+        return GenerationInput(self.content.to(device), self.content_type)
+
+InterleavedInputs = List[GenerationInput]
+
 
 
 def select_spans_poisson(array_size: int, lambda_param: int, eta: float):
@@ -162,9 +201,43 @@ class InterleavingTokeniser(AudioTokeniser):
     def string_tokenise(self, audio_repr: List[str], **tokenise_kwargs) -> dict:
         return self.text_tokeniser(audio_repr, add_special_tokens=True, **tokenise_kwargs)
 
-    def tokenise(self, wav: torch.Tensor, lens: torch.Tensor=None) -> dict:
-        str_repr = self.stringify_representation(self.audio_represent(wav, lens))
-        return self.string_tokenise(str_repr, return_tensors='pt', padding=True)
+    def _stringify_interleaved(self, inp: InterleavedInputs) -> str:
+        """
+        Convert a single interleaved input to a string representation, by extracting Units from the audio and joining it
+        with the text segments. This currently doesn't batch audio segments, instead works sequentially which could be
+        slow with lots of audio segments.
+        """
+        if inp and isinstance(inp[0], tuple):  # Convert tuples to GenerationInput
+            inp = [GenerationInput.from_tuple(i) for i in inp]
+
+        cur_str = ""
+        prev_mod = None
+        for segment in inp:
+            if segment.content_type.value == ContentType.SPEECH.value:
+                if prev_mod != "s":
+                    cur_str += f"{SPEECH_TOKEN}"
+                cur_str += self.stringify_representation(self.audio_represent(segment.content.unsqueeze(0)))[0]
+                prev_mod = "s"  # speech
+            elif segment.content_type.value == ContentType.TEXT.value:
+                if prev_mod != "t":
+                    cur_str += f"{TEXT_TOKEN}"
+                cur_str += segment.content
+                prev_mod = "t"  # text
+            else:
+                raise ValueError(f"Unknown content type: {segment.content_type.value}")
+        return cur_str
+
+    def tokenise(self, inputs: Union[torch.Tensor, List[InterleavedInputs]], lens: torch.Tensor = None) -> dict:
+        if isinstance(inputs, torch.Tensor):  # Input is Speech Only batch
+            str_repr = self.stringify_representation(self.audio_represent(inputs, lens))
+            return self.string_tokenise(str_repr, return_tensors='pt', padding=True)
+        elif isinstance(inputs, list):  # Input is Interleaved batch
+            str_reps = []
+            for inp in inputs:
+                str_reps.append(self._stringify_interleaved(inp))
+            return self.string_tokenise(str_reps, return_tensors='pt', padding=True)
+        else:
+            raise ValueError(f"Inputs should be a list of InterleavedInputs or a torch.Tensor, got {type(inputs)}")
 
     def build_prompt(self, wav: torch.Tensor, lens: Optional[torch.Tensor] = None) -> dict:
         # TODO: this requires special treatment if we want to create specific modalities etc
