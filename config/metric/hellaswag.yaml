@@ -1,0 +1,6 @@
+defaults:
+  - default
+  - _self_
+  
+metric_type: hellaswag
+data_path: //reference/hellaswag
