@@ -7,6 +7,7 @@ from slamkit.model import tlm_factory
 from slamkit.tokeniser import tokeniser_factory
 from slamkit.metric.generative_metric import generate, asr_perplexity
 from slamkit.metric.modelling_metric import swuggy, salmon, sblimp, storycloze
+from slamkit.metric.textual_metric import hellaswag
 from slamkit.model import SpeechLM
 import torch
 import logging
@@ -51,6 +52,8 @@ def main(cfg: DictConfig):
             res = asr_perplexity(model, path, cfg.batch_size, cfg.metric.whisper_model, cfg.metric.llm_name_or_path, used_token_modality,
                                 cfg.metric.prompt_length, cfg.metric.auto_bleu_n, tokeniser.fe_sample_rate, cfg.metric.get("num_files", None),
                                 cfg.num_workers, cfg.pin_memory, **cfg.metric.get("generate_kwargs", {}))
+        elif cfg.metric.metric_type == 'hellaswag':
+            res = hellaswag(model, path, used_token_modality, mean_nll, cfg.batch_size, cfg.num_workers, cfg.pin_memory, cfg.metric.get("subfolder", False))
         else:
             raise ValueError(f'Unknown metric type: {cfg.metric.metric_type}')
     if cfg.metric.metric_type != "generate":

@@ -35,6 +35,19 @@ class SpeechLM:
         ignore_tokens = self.tokeniser.get_ignore_tokens(used_token_modality)
         return self.model.log_likelihood(tokens, mean_nll, ignore_tokens)
 
+    def text_log_likelihood(self, texts: List[str], mean_nll: bool = True, used_token_modality: Optional[str] = None) -> torch.Tensor:
+        """
+        Given a list of texts, calculate the log likelihood for each sample.
+        :param texts: A list of strings
+        :param mean_nll: whether to take mean instead of sum thus cancelling length bias
+        :param used_token_modality: the tokens modality to use
+        :return:
+        """
+        tokens = self.tokeniser.string_tokenise(texts, return_tensors='pt', padding=True)['input_ids'].to(self.device)
+        ignore_tokens = self.tokeniser.get_ignore_tokens(used_token_modality)
+        return self.model.log_likelihood(tokens, mean_nll, ignore_tokens)
+
+
     def generate(self, wavs: torch.Tensor, lens: Optional[torch.Tensor] = None, used_token_modality: Optional[str] = None, remove_prompt=False, **kwargs) -> List[torch.Tensor]:
         """
         Given a batch of wavs zero padded, generate the continuation tokens or audio if a vocoder is present
