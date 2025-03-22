@@ -201,7 +201,7 @@ class InterleavingTokeniser(AudioTokeniser):
     def string_tokenise(self, audio_repr: List[str], **tokenise_kwargs) -> dict:
         return self.text_tokeniser(audio_repr, add_special_tokens=True, **tokenise_kwargs)
 
-    def _stringify_interleaved(self, inp: InterleavedInputs) -> str:
+    def _stringify_interleaved(self, inp: Union[InterleavedInputs, List[tuple]]) -> str:
         """
         Convert a single interleaved input to a string representation, by extracting Units from the audio and joining it
         with the text segments. This currently doesn't batch audio segments, instead works sequentially which could be
