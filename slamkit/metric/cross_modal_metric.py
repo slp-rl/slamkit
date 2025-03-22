@@ -12,7 +12,7 @@ from ..tokeniser.interleaving_tokeniser import GenerationInput
 
 
 class CrossModalMetricDataset(Dataset):
-    def __init__(self, path, subfolder=True, prompt_modality='TEXT', cont_modality='SPEECH'):
+    def __init__(self, path, subfolder=True, prompt_modality='TEXT', cont_modality='SPEECH', sample_rate=16000):
         super().__init__()
         self.data = []
         if subfolder:
@@ -24,6 +24,7 @@ class CrossModalMetricDataset(Dataset):
 
         self.prompt_modality = prompt_modality
         self.cont_modality = cont_modality
+        self.sample_rate = sample_rate
 
     def __len__(self):
         return len(self.data)
@@ -33,15 +34,31 @@ class CrossModalMetricDataset(Dataset):
         with open(txt_file, 'r') as f:
             return f.read().strip()
 
+    @staticmethod
+    def _load_audio(path, sr=16000):
+        wav, _sr = torchaudio.load(path)
+        if sr != _sr:
+            wav = torchaudio.functional.resample(wav, _sr, sr)
+        return wav[0]
+
+    @staticmethod
+    def _load_txt_or_audio(mod, txt_path, audio_path, sr):
+        return CrossModalMetricDataset._load_text(txt_path) if mod == 'TEXT' else CrossModalMetricDataset._load_audio(audio_path, sr)
+
     def __getitem__(self, idx):
         base_path = str(self.data[idx]).split("_correct.wav")[0]
         pos_wav, neg_wav, prompt_wav = base_path + "_correct.wav", base_path + "_incorrect.wav", base_path + "_mutual.wav"
         pos_txt, neg_txt, prompt_txt = base_path + "_correct.txt", base_path + "_incorrect.txt", base_path + "_mutual.txt"
-        prompt = CrossModalMetricDataset._load_text(prompt_txt) if self.prompt_modality == 'TEXT' else torchaudio.load(prompt_wav)[0][0]
-        pos = CrossModalMetricDataset._load_text(pos_txt) if self.cont_modality == 'TEXT' else torchaudio.load(pos_wav)[0][0]
-        neg = CrossModalMetricDataset._load_text(neg_txt) if self.cont_modality == 'TEXT' else torchaudio.load(neg_wav)[0][0]
-        pos_sample = [(self.prompt_modality, prompt), (self.cont_modality, pos)]
-        neg_sample = [(self.prompt_modality, prompt), (self.cont_modality, neg)]
+        prompt = CrossModalMetricDataset._load_txt_or_audio(self.prompt_modality, prompt_txt, prompt_wav, self.sample_rate)
+        pos = CrossModalMetricDataset._load_txt_or_audio(self.cont_modality, pos_txt, pos_wav, self.sample_rate)
+        neg = CrossModalMetricDataset._load_txt_or_audio(self.cont_modality, neg_txt, neg_wav, self.sample_rate)
+        # If both prompt and cont are speech, we concat them so that they are encoded by the feature extractor together
+        if self.prompt_modality == 'SPEECH' and self.cont_modality == 'SPEECH':
+            pos_sample = [(self.prompt_modality, torch.cat([prompt, pos]))]
+            neg_sample = [(self.prompt_modality, torch.cat([prompt, neg]))]
+        else:
+            pos_sample = [(self.prompt_modality, prompt), (self.cont_modality, pos)]
+            neg_sample = [(self.prompt_modality, prompt), (self.cont_modality, neg)]
         return [GenerationInput.from_tuple(t) for t in pos_sample], [GenerationInput.from_tuple(t) for t in neg_sample]
 
 
