@@ -25,8 +25,8 @@ class ModellingMetricDataset(Dataset):
 
     def __getitem__(self, idx):
         pos_file, neg_file = self.data[2 * idx], self.data[2 * idx + 1]
-        pos = torchaudio.load(pos_file)[0][0]
-        neg = torchaudio.load(neg_file)[0][0]
+        pos = torchaudio.load(str(pos_file))[0][0]
+        neg = torchaudio.load(str(neg_file))[0][0]
         return pos, neg, pos.shape[-1], neg.shape[-1]
 
 

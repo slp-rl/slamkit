@@ -47,7 +47,7 @@ def init_dataset(cfg: DictConfig, tokeniser: AudioTokeniser) -> Tuple[Dataset, D
                 ds['train'] = concatenate_datasets([ds['train']] * cfg.data.repetitions[i])
             out.append(ds)
         ds_train = interleave_datasets([d['train'] for d in out], probabilities=cfg.data.train_ratios,
-                                       stopping_strategy=cfg.data.stopping_strategy)
+                                       stopping_strategy=cfg.data.stopping_strategy, seed=0)
         ds_val = concatenate_datasets([d['validation'] for d in out if 'validation' in d])
         dataset = DatasetDict({'train': ds_train, 'validation': ds_val})
     else:

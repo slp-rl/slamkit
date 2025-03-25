@@ -1,0 +1,10 @@
+defaults:
+  - default
+  - _self_
+
+metric_type: storycloze
+subfolder: true
+data_path: //reference/cross_ms_tSC
+cross_modal: true
+prompt_modality: TEXT
+cont_modality: TEXT
