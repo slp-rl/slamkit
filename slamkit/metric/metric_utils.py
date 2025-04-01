@@ -1,4 +1,3 @@
-
 from typing import List
 import torch
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline, AutoTokenizer, AutoModelForCausalLM, PreTrainedModel, PreTrainedTokenizer
@@ -6,6 +5,9 @@ import re
 from ..utils.calculation_utils import calc_nll
 from tqdm import tqdm
 import os
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 OPENAI_MODELS = [
@@ -113,7 +115,7 @@ class OpenAIJudge:
                     ],
                 )
             except Exception as e:
-                print(f"Error: {e}")
+                logger.error(f"Error: {e}")
                 continue
             answer = completion.choices[0].message.content
             res.append(extract_digit_from_boxed(answer))
