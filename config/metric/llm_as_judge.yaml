@@ -1,0 +1,20 @@
+defaults:
+  - default
+  - _self_
+
+metric_type: llm_as_judge
+whisper_model: openai/whisper-large-v3-turbo
+llm_name_or_path: gpt-4o
+instruction: "The task is evaluating the relevance and likelihood of the predicted text continuation, given the text prompt. You should also consider whether the meaning of the text continuation is making sense. The text prompt is: \"[prompt_audio_transcription]\", and the text continuation is :\"[generated_audio_transcription]\". You must give an overall rating from 1 to 5. The rating guideline is as below:\n1: The text continuation is very unlikely and irrelevant to the text prompt.\n2: The text continuation is unlikely and marginally relevant to the text prompt.\n3: The text continuation is moderately likely and relevant to the text prompt.\n4: The text continuation is likely and relevant to the text prompt.\n5: The text continuation is very likely and highly relevant.\n You should take the following steps to provide the score:\nFirst: briefly analyze the sample with the above definition.\nSecond: MUST follow the output format as: \"The final answer is $\\boxed{x}$\". Where x is the score you are giving."
+prompt_length: 3
+num_files: null
+min_file_length: 6
+use_alignment: true
+alignment_folder: null                
+num_log: 10
+generate_kwargs:
+  temperature: 0.8
+  top_k: 25
+  max_new_tokens: 150
+  do_sample: true
+  repetition_penalty: 1.1
