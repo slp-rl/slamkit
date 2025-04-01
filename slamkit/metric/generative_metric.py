@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader, Dataset
 from torch.nn.utils.rnn import pad_sequence
 from glob import glob, iglob
 import logging
-from typing import Optional
+from typing import List, Optional, Tuple
 import os
 
 from .metric_utils import get_whisper_pipeline, get_llm, get_llm_preplexity, get_judge
@@ -15,16 +15,17 @@ from ..utils.calculation_utils import calc_auto_bleu
 
 logger = logging.getLogger(__name__)
 
-def get_cut_location(alignment, prompt_length):
+def get_cut_location(alignment:List[Tuple[str,float,float]], prompt_length:float):
     """
-    Find the closest word in the alignment to the prompt length.
+    alignmet is a list of tuples (word, start_time, end_time)
+    Find the closest word in the alignment to the prompt length. returns it's end time.
     """
     endtimes = torch.tensor([word[2] for word in alignment])
     dist = torch.abs(endtimes - prompt_length)
     time = endtimes[dist.argmin()].item()        
     return time
 
-def is_shorter(file, min_file_length):
+def is_shorter(file:str, min_file_length:float):
     metadata = torchaudio.info(file)
     if metadata.num_frames < min_file_length * metadata.sample_rate:
         return True
@@ -72,7 +73,7 @@ class PromptDataset(Dataset):
             audio = audio[:int(prompt_length*self.sample_rate)]
         return audio, audio.shape[-1]
     
-    def get_alignment_path(self, file):
+    def get_alignment_path(self, file:str):
         if self.alignment_folder is None:
             return file.replace(".wav", ".json")
         basename = os.path.basename(file)
@@ -156,8 +157,8 @@ def llm_as_judge(model: SpeechLM, data_path: str, batch_size: int, whisper_model
         prompts.extend(audio)
         prompt_audio_transcriptions = whisper_pipeline([sample.cpu().numpy() for sample in audio], batch_size=len(audio))
         generated_audio_transcriptions = whisper_pipeline([gen.cpu().numpy() for gen in gen_res], batch_size=len(gen_res))
-        prompt_audio_transcriptions = [res_text["text"] if sample.shape[-1] > 0 else "" for sample, res_text in zip(audio, prompt_audio_transcriptions)]
-        generated_audio_transcriptions = [res_text["text"] if gen.shape[-1] > 0 else "" for gen, res_text in zip(gen_res, generated_audio_transcriptions)]
+        prompt_audio_transcriptions = [audio_transcription["text"] if sample.shape[-1] > 0 else "" for sample, audio_transcription in zip(audio, prompt_audio_transcriptions)]
+        generated_audio_transcriptions = [audio_transcription["text"] if gen.shape[-1] > 0 else "" for gen, audio_transcription in zip(gen_res, generated_audio_transcriptions)]
         text = [
             instruction.replace("[prompt_audio_transcription]", prompt_audio_transcription).replace("[generated_audio_transcription]", generated_audio_transcription) for 
             prompt_audio_transcription, generated_audio_transcription in zip(prompt_audio_transcriptions, generated_audio_transcriptions)
@@ -169,4 +170,4 @@ def llm_as_judge(model: SpeechLM, data_path: str, batch_size: int, whisper_model
     res = list(filter(lambda x: x is not None, res))
     text_res = [(p_text,g_text) for p_text, g_text, r in zip(prompt_texts, gen_texts, res)]
     logger.info("got response for {} out of {}".format(len(res), len(dataset)))
-    return {'llm_as_judge': torch.as_tensor(res).float().mean().item(), "generate": gen, "prompts": prompts, "text_res": text_res}
+    return {'llm_as_judge': torch.as_tensor(res).float().mean().item(), "generate": gen, "prompts": prompts, "audio_transcription": text_res}

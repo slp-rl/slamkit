@@ -106,9 +106,9 @@ def main(cfg: DictConfig):
                                                                caption=f'generated_{i}', sample_rate=tokeniser.fe_sample_rate)
                 logs[f'prompt/prompt_{i}'] = wandb.Audio(prompt.squeeze(0).cpu().numpy(),
                                                          caption=f'prompt_{i}', sample_rate=tokeniser.fe_sample_rate)
-                if "text_res" in res:
-                    logs[f'prompt/prompt_text_{i}'] = res["text_res"][i][0]
-                    logs[f'generated/generated_text_{i}'] = res["text_res"][i][1]
+                if "audio_transcription" in res:
+                    logs[f'prompt/prompt_text_{i}'] = res["audio_transcription"][i][0]
+                    logs[f'generated/generated_text_{i}'] = res["audio_transcription"][i][1]
                     
             wandb.log(logs)
         for key, val in res.items():

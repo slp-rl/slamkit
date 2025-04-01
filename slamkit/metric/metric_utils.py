@@ -65,10 +65,9 @@ def extract_digit_from_boxed(string):
         return int(match.group(1))
     return None
 
-def judge_text(model, tokenizer, text:List[str], device):
-    
-    tokenizer.padding_side = "left"
-    model_inputs = tokenizer(text, return_tensors='pt', padding=True).to(device)
+def judge_text(model, tokeniser, text:List[str], device):
+    tokeniser.padding_side = "left"
+    model_inputs = tokeniser(text, return_tensors='pt', padding=True).to(device)
     generation = model.generate(
         input_ids=model_inputs['input_ids'],
         attention_mask=model_inputs['attention_mask'],
@@ -76,14 +75,14 @@ def judge_text(model, tokenizer, text:List[str], device):
         do_sample=True,
         temperature=0.8,
     )
-    decode = tokenizer.batch_decode(generation, skip_special_tokens=True)
+    decode = tokeniser.batch_decode(generation, skip_special_tokens=True)
     res = [extract_digit_from_boxed(text) for text in decode]
     return res
 
 class LLMJudge:
-    def __init__(self, model, tokenizer, device, batch_size):
+    def __init__(self, model, tokeniser, device, batch_size):
         self.model = model
-        self.tokenizer = tokenizer
+        self.tokeniser = tokeniser
         self.device = device
         self.batch_size = batch_size
 
@@ -91,7 +90,7 @@ class LLMJudge:
         res = []
         for i in tqdm(range(0, len(texts), self.batch_size), desc="LLM Judging"):
             batch_text = texts[i:i + self.batch_size]
-            res.extend(judge_text(self.model, self.tokenizer, batch_text, self.device))
+            res.extend(judge_text(self.model, self.tokeniser, batch_text, self.device))
         return res
     
 
@@ -126,5 +125,5 @@ def get_judge(name, device, batch_size):
     if name in OPENAI_MODELS:
         return OpenAIJudge(name)
     else:
-        model, tokenizer = get_llm(name, device)
-        return LLMJudge(model, tokenizer, device, batch_size)
+        model, tokeniser = get_llm(name, device)
+        return LLMJudge(model, tokeniser, device, batch_size)
