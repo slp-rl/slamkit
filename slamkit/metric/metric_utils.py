@@ -86,7 +86,7 @@ class LLMJudge:
         self.device = device
         self.batch_size = batch_size
 
-    def __call__(self, texts:List[str]):
+    def __call__(self, texts:List[str]) -> List[int]:
         res = []
         for i in tqdm(range(0, len(texts), self.batch_size), desc="LLM Judging"):
             batch_text = texts[i:i + self.batch_size]
@@ -103,7 +103,7 @@ class OpenAIJudge:
         self.model_name = name
         
 
-    def __call__(self, texts:List[str]):
+    def __call__(self, texts:List[str]) -> List[int]:
         res = []
         for text in tqdm(texts, desc="OpenAI Judging"):
             try:
