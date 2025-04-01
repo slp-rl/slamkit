@@ -87,10 +87,10 @@ class LLMJudge:
         self.device = device
         self.batch_size = batch_size
 
-    def __call__(self, text:List[str]):
+    def __call__(self, texts:List[str]):
         res = []
-        for i in tqdm(range(0, len(text), self.batch_size), desc="LLM Judging"):
-            batch_text = text[i:i + self.batch_size]
+        for i in tqdm(range(0, len(texts), self.batch_size), desc="LLM Judging"):
+            batch_text = texts[i:i + self.batch_size]
             res.extend(judge_text(self.model, self.tokenizer, batch_text, self.device))
         return res
     
@@ -104,9 +104,9 @@ class OpenAIJudge:
         self.model_name = name
         
 
-    def __call__(self, text:List[str]):
+    def __call__(self, texts:List[str]):
         res = []
-        for text in tqdm(text, desc="OpenAI Judging"):
+        for text in tqdm(texts, desc="OpenAI Judging"):
             try:
                 completion = self.client.chat.completions.create(
                     model=self.model_name,
