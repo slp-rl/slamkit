@@ -15,9 +15,9 @@ from ..utils.calculation_utils import calc_auto_bleu
 
 logger = logging.getLogger(__name__)
 
-def get_cut_location(alignment:List[Tuple[str,float,float]], prompt_length:float):
+def get_cut_location(alignment: List[Tuple[str,float,float]], prompt_length:float):
     """
-    alignmet is a list of tuples (word, start_time, end_time)
+    alignmet is a list of tuples (word, start_time, end_time), time is in seconds.
     Find the closest word in the alignment to the prompt length. returns it's end time.
     """
     endtimes = torch.tensor([word[2] for word in alignment])
