@@ -156,7 +156,7 @@ def llm_as_judge(model: SpeechLM, data_path: str, batch_size: int, whisper_model
         prompts.extend(audio)
         prompt_audio_transcriptions = whisper_pipeline([sample.cpu().numpy() for sample in audio], batch_size=len(audio))
         generated_audio_transcriptions = whisper_pipeline([gen.cpu().numpy() for gen in gen_res], batch_size=len(gen_res))
-        prompt_audio_transcriptions = [res_text["text"] if smaple.shape[-1] > 0 else "" for smaple, res_text in zip(audio, prompt_audio_transcriptions)]
+        prompt_audio_transcriptions = [res_text["text"] if sample.shape[-1] > 0 else "" for sample, res_text in zip(audio, prompt_audio_transcriptions)]
         generated_audio_transcriptions = [res_text["text"] if gen.shape[-1] > 0 else "" for gen, res_text in zip(gen_res, generated_audio_transcriptions)]
         text = [
             instruction.replace("[prompt_audio_transcription]", prompt_audio_transcription).replace("[generated_audio_transcription]", generated_audio_transcription) for 
