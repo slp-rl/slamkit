@@ -141,7 +141,7 @@ def llm_as_judge(model: SpeechLM, data_path: str, batch_size: int, whisper_model
                             alignment_folder=alignment_folder, use_alignment=use_alignment)
     assert len(dataset) > 0, f"no samples found for {data_path}"
     assert instruction is not None, "llm_as_judge requires instruction"
-    assert "[prompt_audio_transcription]" in instruction, "llm_as_judge requires [text_prompt] in instruction"
+    assert "[prompt_audio_transcription]" in instruction, "llm_as_judge requires [prompt_audio_transcription] in instruction"
     assert "[generated_audio_transcription]" in instruction, "llm_as_judge requires [generated_audio_transcription] in instruction"
     dl = DataLoader(dataset, batch_size=batch_size, collate_fn=pad_collate,
                     num_workers=num_workers, pin_memory=pin_memory)
@@ -154,7 +154,7 @@ def llm_as_judge(model: SpeechLM, data_path: str, batch_size: int, whisper_model
         gen_res = model.generate(audio, l, used_tokens_modality, remove_prompt=True, **generate_kwargs)
         gen.extend(gen_res)
         prompts.extend(audio)
-        prompt_audio_transcriptions = whisper_pipeline([audio.cpu().numpy() for audio in audio], batch_size=len(audio))
+        prompt_audio_transcriptions = whisper_pipeline([sample.cpu().numpy() for sample in audio], batch_size=len(audio))
         generated_audio_transcriptions = whisper_pipeline([gen.cpu().numpy() for gen in gen_res], batch_size=len(gen_res))
         prompt_audio_transcriptions = [res_text["text"] if audio.shape[-1] > 0 else "" for audio, res_text in zip(audio, prompt_audio_transcriptions)]
         generated_audio_transcriptions = [res_text["text"] if gen.shape[-1] > 0 else "" for gen, res_text in zip(gen_res, generated_audio_transcriptions)]
