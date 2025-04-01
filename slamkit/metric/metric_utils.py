@@ -1,9 +1,20 @@
-
 from typing import List
 import torch
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline, AutoTokenizer, AutoModelForCausalLM, PreTrainedModel, PreTrainedTokenizer
-
+import re
 from ..utils.calculation_utils import calc_nll
+from tqdm import tqdm
+import os
+
+import logging
+logger = logging.getLogger(__name__)
+
+
+OPENAI_MODELS = [
+    "gpt-3.5-turbo",
+    "gpt-4",
+    "gpt-4o"
+]
 
 
 def get_whisper_pipeline(model_id, device):
@@ -47,3 +58,72 @@ def get_llm_preplexity(model:PreTrainedModel, tokeniser:PreTrainedTokenizer, tex
     shift_logits = logits[..., :-1, :].contiguous()
     shift_labels = labels[..., 1:].contiguous()
     return calc_nll(shift_logits, shift_labels, shift_labels.ne(-100))
+
+def extract_digit_from_boxed(string):
+    match = re.search(r'\\boxed\{(\d+)\}', string)
+    if match:
+        return int(match.group(1))
+    return None
+
+def judge_text(model, tokeniser, text:List[str], device):
+    tokeniser.padding_side = "left"
+    model_inputs = tokeniser(text, return_tensors='pt', padding=True).to(device)
+    generation = model.generate(
+        input_ids=model_inputs['input_ids'],
+        attention_mask=model_inputs['attention_mask'],
+        max_new_tokens=512,
+        do_sample=True,
+        temperature=0.8,
+    )
+    decode = tokeniser.batch_decode(generation, skip_special_tokens=True)
+    res = [extract_digit_from_boxed(text) for text in decode]
+    return res
+
+class LLMJudge:
+    def __init__(self, model, tokeniser, device, batch_size):
+        self.model = model
+        self.tokeniser = tokeniser
+        self.device = device
+        self.batch_size = batch_size
+
+    def __call__(self, texts:List[str]) -> List[int]:
+        res = []
+        for i in tqdm(range(0, len(texts), self.batch_size), desc="LLM Judging"):
+            batch_text = texts[i:i + self.batch_size]
+            res.extend(judge_text(self.model, self.tokeniser, batch_text, self.device))
+        return res
+    
+
+class OpenAIJudge:
+    def __init__(self, name):
+        from openai import OpenAI
+        self.client = OpenAI(
+            api_key=os.environ["OPENAI_API_KEY"],
+        )
+        self.model_name = name
+        
+
+    def __call__(self, texts:List[str]) -> List[int]:
+        res = []
+        for text in tqdm(texts, desc="OpenAI Judging"):
+            try:
+                completion = self.client.chat.completions.create(
+                    model=self.model_name,
+                    messages=[
+                        {"role": "user", "content": text}
+                    ],
+                )
+            except Exception as e:
+                logger.error(f"Error: {e}")
+                continue
+            answer = completion.choices[0].message.content
+            res.append(extract_digit_from_boxed(answer))
+        return res 
+
+        
+def get_judge(name, device, batch_size):
+    if name in OPENAI_MODELS:
+        return OpenAIJudge(name)
+    else:
+        model, tokeniser = get_llm(name, device)
+        return LLMJudge(model, tokeniser, device, batch_size)
