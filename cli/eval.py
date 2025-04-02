@@ -5,7 +5,7 @@ import hydra
 from slamkit.vocoder import vocoder_factory
 from slamkit.model import tlm_factory
 from slamkit.tokeniser import tokeniser_factory
-from slamkit.metric.generative_metric import generate, asr_perplexity
+from slamkit.metric.generative_metric import generate, asr_perplexity, llm_as_judge
 from slamkit.metric.modelling_metric import swuggy, salmon, sblimp, storycloze
 from slamkit.model import SpeechLM
 import torch
@@ -47,12 +47,19 @@ def main(cfg: DictConfig):
                 if cfg.vocoder.vocoder_type is None:
                     logger.warning("You are currently trying to run generation without a vocoder, which will generate tokens, but has no effect. You can use a vocoder by, e.g. setting `vocoder=vocoder_hubert_25`")
                 res = generate(model, path, cfg.batch_size, used_token_modality,
-                            cfg.metric.prompt_length, tokeniser.fe_sample_rate, cfg.metric.num_files,
+                            cfg.metric.prompt_length, cfg.metric.get("min_file_length",None), cfg.metric.get("alignment_folder", None), cfg.metric.get("use_alignment", False),
+                            tokeniser.fe_sample_rate, cfg.metric.num_files,
                             cfg.num_workers, cfg.pin_memory, **cfg.metric.get("generate_kwargs", {}))
             elif cfg.metric.metric_type == 'asr_perplexity':
                 res = asr_perplexity(model, path, cfg.batch_size, cfg.metric.whisper_model, cfg.metric.llm_name_or_path, used_token_modality,
-                                    cfg.metric.prompt_length, cfg.metric.auto_bleu_n, tokeniser.fe_sample_rate, cfg.metric.get("num_files", None),
+                                    cfg.metric.prompt_length, cfg.metric.get("min_file_length",None), cfg.metric.get("alignment_folder", None), cfg.metric.get("use_alignment", False),
+                                    cfg.metric.auto_bleu_n, tokeniser.fe_sample_rate, cfg.metric.get("num_files", None),
                                     cfg.num_workers, cfg.pin_memory, **cfg.metric.get("generate_kwargs", {}))
+            elif cfg.metric.metric_type == 'llm_as_judge':
+                res = llm_as_judge(model, path, cfg.batch_size, cfg.metric.whisper_model, cfg.metric.llm_name_or_path, cfg.metric.instruction, used_token_modality,
+                                   cfg.metric.prompt_length, cfg.metric.min_file_length, cfg.metric.get("alignment_folder", None), cfg.metric.get("use_alignment", False),
+                                   tokeniser.fe_sample_rate, cfg.metric.get("num_files", None),
+                                   cfg.num_workers, cfg.pin_memory, **cfg.metric.get("generate_kwargs", {}))
             else:
                 raise ValueError(f'Unknown metric type: {cfg.metric.metric_type}')
         else:
@@ -71,7 +78,12 @@ def main(cfg: DictConfig):
         for key, val in res.items():
             if key == "generate" or key == "prompts":
                 continue
-            print(f"{key}: {val}")
+            if isinstance(val, list):
+                print(f"{key}:")
+                for i, v in enumerate(val):
+                    print(f"\t{i}: {v}")
+            else:
+                print(f"{key}: {val}")
     if cfg.metric.get("out_path", False) and "generate" in res and cfg.vocoder.vocoder_type is not None:
         import torchaudio
         os.makedirs(cfg.metric.out_path, exist_ok=True)
@@ -106,6 +118,10 @@ def main(cfg: DictConfig):
                                                                caption=f'generated_{i}', sample_rate=tokeniser.fe_sample_rate)
                 logs[f'prompt/prompt_{i}'] = wandb.Audio(prompt.squeeze(0).cpu().numpy(),
                                                          caption=f'prompt_{i}', sample_rate=tokeniser.fe_sample_rate)
+                if "audio_transcription" in res:
+                    logs[f'prompt/prompt_text_{i}'] = res["audio_transcription"][i][0]
+                    logs[f'generated/generated_text_{i}'] = res["audio_transcription"][i][1]
+
             wandb.log(logs)
         for key, val in res.items():
             if key == "generate" or key == "prompts":
