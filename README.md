@@ -1,6 +1,6 @@
 # SlamKit
-This repository is a growing, fully open-source toolkit for training and evaluation Speech Language Models. This 
-includes, but not limited to - Speech only pre-training, Preference Alignment, Speech-text interleaving, and more. 
+🗣️This repository is a growing, fully open-source toolkit for training and evaluating Speech Language Models. This 
+includes, but is not limited to - Speech only pre-training, Preference Alignment, Speech-text interleaving, and more. 
 
 💻 We also plan to expand this repository to include more features, if you would like
 to develop this open source and contribute see [Contributing](#contributing).
@@ -14,8 +14,8 @@ pip install -e .
 
 Be advised that some features could require additional installations, such as `flash_attention`, but we keep the base installation minimal.
 
-# Methods Implemented
-This toolkit was used in several studies, see the specific READMEs for each for more details:
+## Methods Implemented
+This toolkit was used in several studies, see the specific READMEs of each for more details:
 - "_Slamming_: Training a Speech Language Model on One GPU in a Day" - [Link](https://github.com/slp-rl/slamkit/blob/main/docs/SLAM.md)
 - "Scaling Analysis of Interleaved Speech-Text Language Models"- [Link](https://github.com/slp-rl/slamkit/blob/main/docs/SIMS.md)
 
@@ -159,7 +159,8 @@ Add support for even more efficient implementations? If you are interested in bu
 project - open an Issue, and one of the maintainers will guide you in opening a PR!
 
 ## Acknowledgements
-We isolate vocoder-related code from [textlesslib](https://github.com/facebookresearch/textlesslib), in `slamkit/vocoder/textless_*`.
+- We isolate vocoder-related code from [textlesslib](https://github.com/facebookresearch/textlesslib), in `slamkit/vocoder/textless_*`.
+- Some cross-modal code is inspired by [SpiritLM](https://github.com/facebookresearch/spiritlm).
 
 ## Citation
 If you found this repository useful, please cite our work:
