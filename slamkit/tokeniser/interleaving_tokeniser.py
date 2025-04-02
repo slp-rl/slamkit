@@ -269,10 +269,13 @@ class InterleavingTokeniser(AudioTokeniser):
         # We currently support only single output modality, not interleaved decoding
         # Note! this could mean that part of the output is ignored
         ignore_tokens = [self.text_tokeniser.pad_token_id, self.text_tokeniser.bos_token_id, self.text_tokeniser.eos_token_id]
+        # Some tokens could be None if specific text tokenisers doesn't define eos for instance, this causes issues with tensor
+        ignore_tokens = [i for i in ignore_tokens if i is not None]
         ignore_tokens += [self.text_tokeniser.encode(SPEECH_TOKEN)[0], self.text_tokeniser.encode(TEXT_TOKEN)[0]]
         if output_modality:
             ignore_tokens += self.get_ignore_tokens(output_modality)
-        ignore_tokens = torch.tensor([i for i in ignore_tokens if i is not None], device=tokens.device)
+        # Some tokens could be None if specific text tokenisers doesn't define eos for instance, this causes issues with tensor
+        ignore_tokens = torch.tensor(ignore_tokens, device=tokens.device)
 
         tokens = tokens[~torch.isin(tokens, ignore_tokens)]
         str_repr = self.text_tokeniser.decode(tokens)

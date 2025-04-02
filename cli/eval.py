@@ -70,7 +70,7 @@ def main(cfg: DictConfig):
                 from slamkit.metric.cross_modal_generation import generate as cm_generate
                 if cfg.vocoder.vocoder_type is None:
                     logger.warning("You are currently trying to run generation without a vocoder, which will generate tokens, but has no effect. You can use a vocoder by, e.g. setting `vocoder=vocoder_hubert_25`")
-                res = cm_generate(model, path, cfg.batch_size, used_token_modality, cfg.metric.prompt_modality, cfg.metric.cont_modality,
+                res = cm_generate(model, path, cfg.batch_size, cfg.metric.prompt_modality, cfg.metric.cont_modality,
                             cfg.metric.prompt_length, tokeniser.fe_sample_rate, cfg.metric.num_files,
                             cfg.num_workers, cfg.pin_memory, **cfg.metric.get("generate_kwargs", {}))
 

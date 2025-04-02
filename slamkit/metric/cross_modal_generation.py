@@ -17,8 +17,12 @@ class CrossModalPromptDataset(Dataset):
         if num_files is None:
             self.data = glob(glob_path, recursive=True)
         else:
+            self.data = []
             paths = iglob(glob_path, recursive=True)
-            self.data = [next(paths) for _ in range(num_files)]
+            for path in paths:  # Used to avoid StopIteration when requesting more files than available
+                if len(self.data) >= num_files:
+                    break
+                self.data.append(path)
 
         self.prompt_modality = prompt_modality
         self.prompt_length = prompt_length  # only relevant for audio prompts
@@ -52,13 +56,13 @@ class CrossModalPromptDataset(Dataset):
 
 
 def collate_fn(batch):
-    return batch
+    return batch  # Preserves the batch as list-of-lists structure
 
 
 def _list_to_device(l: List[GenerationInput], device):
     return [t.to(device) for t in l]
 
-def generate(model, data_path: str, batch_size: int, used_tokens_modality:Optional[str] = None, prompt_modality: Optional[str] = None,
+def generate(model, data_path: str, batch_size: int, prompt_modality: Optional[str] = None,
              output_modality: Optional[str] = None, prompt_length: Optional[int] = None, sample_rate: int = 16000,
              num_files: Optional[int] = None, num_workers: int = 8, pin_memory: bool = True, **generate_kwargs):
     dataset = CrossModalPromptDataset(data_path, prompt_modality=prompt_modality, prompt_length=prompt_length,
