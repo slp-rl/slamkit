@@ -75,7 +75,7 @@ class UnitTokeniser(AudioTokeniser):
     def build_prompt(self, wav: torch.Tensor, lens: Optional[torch.Tensor] = None,
                      output_modality: Optional[str] = None) -> BatchEncoding:
         tokens = self.string_tokenise(self.audio_stringify(wav, lens), return_tensors='pt', padding=True)
-        # remove eos and irrelevent keys
+        # remove eos and irrelevant keys
         tokens = {k: v[...,:-1] for k, v in tokens.items() if k != "token_type_ids"}
         return BatchEncoding(tokens)
 

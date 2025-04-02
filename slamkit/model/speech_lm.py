@@ -35,7 +35,7 @@ class SpeechLM:
         ignore_tokens = self.tokeniser.get_ignore_tokens(used_token_modality)
         return self.model.log_likelihood(tokens, mean_nll, ignore_tokens)
 
-    def generate(self, wavs: torch.Tensor, lens: Optional[torch.Tensor] = None, output_modality=None,
+    def generate(self, wavs: torch.Tensor, lens: Optional[torch.Tensor] = None, output_modality: str = 'SPEECH',
                  remove_prompt=False, **kwargs) -> List[torch.Tensor]:
         """
         Given a batch of wavs zero padded, generate the continuation tokens or audio if a vocoder is present
