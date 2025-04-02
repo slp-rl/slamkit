@@ -297,11 +297,11 @@ class InterleavingTokeniser(AudioTokeniser):
         """
         num_text_tokens = len(self.text_tokeniser) - self.num_units - len([SPEECH_TOKEN, TEXT_TOKEN])
         special_tokens = [self.text_tokeniser.bos_token_id, self.text_tokeniser.eos_token_id]
-        if used_token_modality.upper() == "SPEECH":
+        if used_token_modality and used_token_modality.upper() == "SPEECH":
             text_tokens = list(x for x in range(0, num_text_tokens) if x not in special_tokens)
             text_tokens += [self.text_tokeniser.encode(SPEECH_TOKEN)[0], self.text_tokeniser.encode(TEXT_TOKEN)[0]]
             return text_tokens
-        if used_token_modality.upper() == "TEXT":
+        if used_token_modality and used_token_modality.upper() == "TEXT":
             speech_tokens = list(x for x in range(num_text_tokens, len(self.text_tokeniser)) if x not in special_tokens + [self.text_tokeniser.encode(SPEECH_TOKEN)[0], self.text_tokeniser.encode(TEXT_TOKEN)[0]])
             return speech_tokens
         return None
