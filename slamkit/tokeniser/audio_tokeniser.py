@@ -1,5 +1,5 @@
 import torch
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Union
 from abc import ABC, abstractmethod
 from omegaconf import DictConfig
 
@@ -54,11 +54,13 @@ class AudioTokeniser(ABC, torch.nn.Module):
         return self.string_tokenise(self.audio_stringify(wav, lens))
 
     @abstractmethod
-    def build_prompt(self, wav: torch.Tensor, lens: Optional[torch.Tensor] = None) -> dict:
+    def build_prompt(self, wav: torch.Tensor, lens: Optional[torch.Tensor] = None,
+                     output_modality: Optional[str] = None) -> dict:
         """
         Tokenise the audio samples as a prompt for generation including any special tokens needed
         :param wav: a batch of audio samples
         :param lens: the length of the non-padding part of the audio samples
+        :param output_modality: the modality of the output, if it is a multi-modal tokeniser from SPEECH and TEXT
         :return: an HF text tokeniser output {'input_ids': ..., 'attention_mask': ...}
         """
         return self.string_tokenise(self.audio_stringify(wav, lens))
@@ -73,11 +75,12 @@ class AudioTokeniser(ABC, torch.nn.Module):
         pass
 
     @abstractmethod
-    def decode_sample(self, tokens: torch.tensor) -> torch.Tensor:
+    def decode_sample(self, tokens: torch.tensor, output_modality: str = "SPEECH") -> Union[torch.Tensor, str]:
         """
         Take a tokenised sample and decode it back to Feature_extractor output, thus matching the expected input to the
         vocoder
         :param tokens: a sample from a dataset
+        :param output_modality: the modality of the output if it is a multi-modal tokeniser from SPEECH or TEXT
         :return: Hubert units
         """
         pass
@@ -87,7 +90,7 @@ class AudioTokeniser(ABC, torch.nn.Module):
         """
         Get the tokens to ignore in the log likelihood calculation
         :param used_token_modality: the tokens modality to use
-        :return: a list of tokens to ignore based on the modality
+        :return: a list of tokens to ignore based on the modality from ["TEXT", "SPEECH"]
         """
         pass
 
