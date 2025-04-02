@@ -72,7 +72,8 @@ class UnitTokeniser(AudioTokeniser):
     def tokenise(self, wav: torch.Tensor, lens: Optional[torch.Tensor] = None) -> BatchEncoding:
         return self.string_tokenise(self.audio_stringify(wav, lens), return_tensors='pt', padding=True)
 
-    def build_prompt(self, wav: torch.Tensor, lens: Optional[torch.Tensor] = None) -> BatchEncoding:
+    def build_prompt(self, wav: torch.Tensor, lens: Optional[torch.Tensor] = None,
+                     output_modality: Optional[str] = None) -> BatchEncoding:
         tokens = self.string_tokenise(self.audio_stringify(wav, lens), return_tensors='pt', padding=True)
         # remove eos and irrelevent keys
         tokens = {k: v[...,:-1] for k, v in tokens.items() if k != "token_type_ids"}
@@ -81,7 +82,7 @@ class UnitTokeniser(AudioTokeniser):
     def prepare_sample(self, sample: dict, **tokenise_kwargs) -> BatchEncoding:
         return self.string_tokenise(sample['audio_repr'], **tokenise_kwargs)
 
-    def decode_sample(self, tokens: torch.tensor) -> torch.Tensor:
+    def decode_sample(self, tokens: torch.tensor, output_modality: str = "SPEECH") -> Union[torch.Tensor, str]:
         # remove special tokens
         tokens = tokens[(tokens != self.pad_token_id) & (tokens != self.bos_token_id) & (tokens != self.eos_token_id)]
         audio_repr = self.text_tokeniser.decode(tokens)

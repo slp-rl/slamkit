@@ -239,10 +239,24 @@ class InterleavingTokeniser(AudioTokeniser):
         else:
             raise ValueError(f"Inputs should be a list of InterleavedInputs or a torch.Tensor, got {type(inputs)}")
 
-    def build_prompt(self, wav: torch.Tensor, lens: Optional[torch.Tensor] = None) -> dict:
-        # TODO: this requires special treatment if we want to create specific modalities etc
-        s_prompt = self.stringify_representation(self.audio_represent(wav, lens))
-        tokens = self.string_tokenise(s_prompt, return_tensors='pt', padding=True)
+    def build_prompt(self, inputs: Union[torch.Tensor, List[InterleavedInputs]], lens: Optional[torch.Tensor] = None,
+                     output_modality = None) -> dict:
+        if isinstance(inputs, list):
+            str_reps = []
+            for inp in inputs:
+                str_reps.append(self._stringify_interleaved(inp))
+        elif isinstance(inputs, torch.Tensor):
+            str_reps = self.stringify_representation(self.audio_represent(inputs, lens))
+        else:
+            raise ValueError(f"Inputs should be a list of InterleavedInputs or a torch.Tensor, got {type(inputs)}")
+        if output_modality:
+            if output_modality.upper() == ContentType.SPEECH.value:
+                str_reps = [s + SPEECH_TOKEN for s in str_reps]
+            elif output_modality.upper() == ContentType.TEXT.value:
+                str_reps = [s + TEXT_TOKEN for s in str_reps]
+            else:
+                raise ValueError(f"Unknown output modality: {output_modality}")
+        tokens = self.string_tokenise(str_reps, return_tensors='pt', padding=True)
         # remove eos if exists, some tokenizers don't add it
         if self.text_tokeniser.eos_token_id is not None and (tokens['input_ids'][..., -1] == self.text_tokeniser.eos_token_id).any():
             tokens = {k: v[..., :-1] for k, v in tokens.items()}
@@ -251,12 +265,23 @@ class InterleavingTokeniser(AudioTokeniser):
     def prepare_sample(self, sample: dict, **tokenise_kwargs) -> dict:
         return self.string_tokenise(sample['audio_repr'], **tokenise_kwargs)
 
-    def decode_sample(self, tokens: torch.tensor) -> torch.Tensor:
-        # currently assume tokens are only audio tokens beacuse we can use used_token_modality to ignore text tokens when generating audio
-        # other options will be added later
-        tokens = tokens[(tokens != self.text_tokeniser.pad_token_id) & (tokens != self.text_tokeniser.bos_token_id) & (tokens != self.text_tokeniser.eos_token_id)]
-        audio_repr = self.text_tokeniser.decode(tokens)
-        return torch.tensor([int(num) for num in re.findall(r'<Un(\d+)>', audio_repr)])
+    def decode_sample(self, tokens: torch.tensor, output_modality: str = "SPEECH") -> Union[torch.Tensor, str]:
+        # We currently support only single output modality, not interleaved decoding
+        # Note! this could mean that part of the output is ignored
+        ignore_tokens = [self.text_tokeniser.pad_token_id, self.text_tokeniser.bos_token_id, self.text_tokeniser.eos_token_id]
+        ignore_tokens += [self.text_tokeniser.encode(SPEECH_TOKEN)[0], self.text_tokeniser.encode(TEXT_TOKEN)[0]]
+        if output_modality:
+            ignore_tokens += self.get_ignore_tokens(output_modality)
+        ignore_tokens = torch.tensor([i for i in ignore_tokens if i is not None], device=tokens.device)
+
+        tokens = tokens[~torch.isin(tokens, ignore_tokens)]
+        str_repr = self.text_tokeniser.decode(tokens)
+        if output_modality.upper() == "SPEECH":
+            return torch.tensor([int(num) for num in re.findall(r'<Un(\d+)>', str_repr)])
+        elif output_modality.upper() == "TEXT":
+            return str_repr
+        else:
+            raise ValueError(f"Unknown output modality: {output_modality}")
     
     @property
     def fe_sample_rate(self) -> int:
@@ -272,11 +297,11 @@ class InterleavingTokeniser(AudioTokeniser):
         """
         num_text_tokens = len(self.text_tokeniser) - self.num_units - len([SPEECH_TOKEN, TEXT_TOKEN])
         special_tokens = [self.text_tokeniser.bos_token_id, self.text_tokeniser.eos_token_id]
-        if used_token_modality == "speech_only":
+        if used_token_modality.upper() == "SPEECH":
             text_tokens = list(x for x in range(0, num_text_tokens) if x not in special_tokens)
             text_tokens += [self.text_tokeniser.encode(SPEECH_TOKEN)[0], self.text_tokeniser.encode(TEXT_TOKEN)[0]]
             return text_tokens
-        if used_token_modality == "text_only":
+        if used_token_modality.upper() == "TEXT":
             speech_tokens = list(x for x in range(num_text_tokens, len(self.text_tokeniser)) if x not in special_tokens + [self.text_tokeniser.encode(SPEECH_TOKEN)[0], self.text_tokeniser.encode(TEXT_TOKEN)[0]])
             return speech_tokens
         return None
