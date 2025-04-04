@@ -1,7 +1,7 @@
 # SIMS
 The official code for "Scaling Analysis of Interleaved Speech-Text Language Models"
 <p align="center">
-    🌐 <a href="https://pages.cs.huji.ac.il/adiyoss-lab/sims/" target="_blank">Project</a> | 📃 <a href="https://arxiv.org/abs/" target="_blank">Paper</a> | 🤗 <a href="https://huggingface.co/collections/slprl/sims-67ecea7521ff9740ff456c5e" target="_blank">Models & Datasets</a><br>
+    🌐 <a href="https://pages.cs.huji.ac.il/adiyoss-lab/sims/" target="_blank">Project</a> | 📃 <a href="https://arxiv.org/abs/2504.02398" target="_blank">Paper</a> | 🤗 <a href="https://huggingface.co/collections/slprl/sims-67ecea7521ff9740ff456c5e" target="_blank">Models & Datasets</a><br>
 </p>
 
 
@@ -43,6 +43,12 @@ python cli/eval.py metric=tstorycloze tokeniser=interleaved_hubert_25 model.pret
 If you use this work, please cite our paper:
 ```bibtex
 @misc{maimon2025scaling,
-      soon
+      title={Scaling Analysis of Interleaved Speech-Text Language Models}, 
+      author={Gallil Maimon and Michael Hassid and Amit Roth and Yossi Adi},
+      year={2025},
+      eprint={2504.02398},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2504.02398}, 
 }
 ```
