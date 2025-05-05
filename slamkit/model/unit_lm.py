@@ -199,6 +199,11 @@ class UnitLM(PreTrainedModel, TokenLM):
 
     @classmethod
     def from_pretrained(cls, pretrained_model_name_or_path: str, *model_args, **kwargs):
+        """
+        Instantiate a UnitLM from a pretrained model.
+        overrides the from_pretrained method to add the from_pretrained argument so it is always set to True.
+        makes sure that the base model is not downloaded when UnitLM is loaded
+        """
         model_args = (True,) + model_args
         return super().from_pretrained(
             pretrained_model_name_or_path,
