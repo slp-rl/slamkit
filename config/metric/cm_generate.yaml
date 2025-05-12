@@ -1,0 +1,18 @@
+defaults:
+  - default
+  - _self_
+
+metric_type: generate
+cross_modal: true
+
+num_files: 5
+out_path: generated
+prompt_length: 3
+prompt_modality: SPEECH
+cont_modality: TEXT
+ext: wav
+generate_kwargs:
+  temperature: 0.8
+  top_k: 25
+  max_new_tokens: 150
+  do_sample: true
