@@ -88,7 +88,7 @@ class UnitLM(PreTrainedModel, TokenLM):
     supports_gradient_checkpointing = True
     _supports_flash_attn_2 = True
 
-    def __init__(self, config: UnitLMConfig):
+    def __init__(self, config: UnitLMConfig, from_pretrained: bool = False):
         super(UnitLM, self).__init__(config)
 
         self.lm = AutoModelForCausalLM.from_pretrained(pretrained_model_name_or_path=config.base_model_name,
@@ -96,8 +96,9 @@ class UnitLM(PreTrainedModel, TokenLM):
                                                        trust_remote_code=config.trust_remote_code,
                                                        use_safetensors=config.use_safetensors,
                                                        torch_dtype=config.base_config.torch_dtype) \
-            if config.twist_init else AutoModelForCausalLM.from_config(config.base_config,
-                                                                       trust_remote_code=config.trust_remote_code,torch_dtype=config.base_config.torch_dtype)
+            if (not from_pretrained and config.twist_init) else AutoModelForCausalLM.from_config(config.base_config,
+                                                                                                trust_remote_code=config.trust_remote_code, 
+                                                                                                torch_dtype=config.base_config.torch_dtype)
         self.lm.resize_token_embeddings(config.vocab_size)
         self.config = config
 
@@ -195,3 +196,17 @@ class UnitLM(PreTrainedModel, TokenLM):
     def generate(self, inputs: Optional[torch.Tensor] = None, generation_config: Optional[GenerationConfig] = None,
                  **kwargs) -> Union[GenerateOutput, torch.LongTensor]:
         return self.lm.generate(inputs, generation_config=generation_config, **kwargs)
+
+    @classmethod
+    def from_pretrained(cls, pretrained_model_name_or_path: str, *model_args, **kwargs):
+        """
+        Instantiate a UnitLM from a pretrained model.
+        """
+        # overrides the from_pretrained(the first argument) method to add the from_pretrained argument so it is always set to True. 
+        # makes sure that the base model is not downloaded when UnitLM is loaded
+        model_args = (True,) + model_args
+        return super().from_pretrained(
+            pretrained_model_name_or_path,
+            *model_args,
+            **kwargs,
+        )
